@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Net.Sockets;
-using System.Net.WebSockets;
 using System.Text;
 
 namespace KVDB
@@ -14,6 +13,8 @@ namespace KVDB
         IPHostEntry ipHostInfo;
         IPAddress ipAddress;
         IPEndPoint ipEndPoint;
+
+        List<Socket> clients;
         
         public Server(ILogger<Server> logger)
         {
@@ -26,6 +27,8 @@ namespace KVDB
             //ipEndPoint = new(ipAddress, 6379);
             ipEndPoint = new(IPAddress.Parse("0.0.0.0"), 6379);
 
+            clients = [];
+
             _logger.LogInformation("Setup ip end point at: {ipEndPoint}", ipEndPoint);
         }
 
@@ -37,13 +40,11 @@ namespace KVDB
                 {
                     _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
                 }
-                await Listen();
-
-                //await Task.Delay(1000, stoppingToken);
+                await ListenForClientConnections();
             }
         }
 
-        private async Task Listen()
+        private async Task ListenForClientConnections()
         {
             _logger.LogInformation("Listening");
             try
@@ -57,11 +58,33 @@ namespace KVDB
                 listener.Listen(100);
 
                 var handler = await listener.AcceptAsync();
-                while (handler.Connected)
+
+                clients.Add(handler);
+                _logger.LogInformation("Connected Clients: {clientsCount}", clients.Count);
+
+                // Creates a new task for the newly connected client
+                // not sure if this is the best way to handle this
+                // but it allows for multple connections, without
+                // having to handle multithreading myself.
+                _ = Task.Run(() => Listen(handler));
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Exception: {ex}", ex);
+            }
+        }
+
+        private async Task Listen(Socket client)
+        {
+            _logger.LogInformation("New client thread");
+            try
+            {
+                while (client.Connected)
                 {
                     _logger.LogInformation("Receiving");
 
-                    using NetworkStream nStream = new(handler);
+                    using NetworkStream nStream = new(client);
                     var buffer = new List<byte>();
 
                     do
@@ -83,8 +106,15 @@ namespace KVDB
                     //
 
                     var echoBytes = Encoding.UTF8.GetBytes("+OK\r\n");
-                    await handler.SendAsync(echoBytes, 0);
+                    await client.SendAsync(echoBytes, 0);
                 }
+            }
+            catch (NullReferenceException ex)
+            {
+                _logger.LogError("Client Disconnected - remove from list and close socket");
+                _logger.LogError("{ex}", ex);
+                clients.Remove(client);
+                client.Close();
             }
             catch (Exception ex)
             {
