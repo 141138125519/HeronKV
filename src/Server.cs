@@ -75,7 +75,11 @@ namespace KVDB
                     // pass to parser
                     var sReader = new StringReader(resp);
                     RESPParser parse = new(sReader);
-                    parse.Read();
+                    var cont = parse.Read();
+                    foreach (var a in cont.Array)
+                    {
+                        _logger.LogInformation($"arrBulk: {a.Bulk}");
+                    }
                     //
 
                     var echoBytes = Encoding.UTF8.GetBytes("+OK\r\n");

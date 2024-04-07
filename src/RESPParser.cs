@@ -23,17 +23,20 @@ namespace KVDB
             _reader = reader;
         }
 
-        private byte[] ReadLine(int size)
+        private List<byte> ReadLine()
         {
             int n = 0;
-            var line = new byte[size];
+            var line = new List<byte>();
 
             while (true)
             {
                 var b = _reader.Read();
                 if (b == '\r')
+                {
+                    _reader.Read();
                     break;
-                line[n] = (byte)b;
+                }
+                line.Add((byte)b);
                 n += 1;
             }
 
@@ -42,24 +45,28 @@ namespace KVDB
 
         private int ReadInteger()
         {
-            var line = ReadLine(1);
+            Console.WriteLine("ReadInteger");
+            var line = ReadLine();
 
-            return int.Parse(line);
+            return int.Parse(line.ToArray());
         }
 
         public Value Read()
         {
+            Console.WriteLine("Read");
             var _type = _reader.Read();
+            Console.WriteLine((char)_type);
 
             switch (_type)
             {
                 case ARRAY:
+                    Console.WriteLine("read arr");
                     return ReadArray();
                 case BULK:
+                    Console.WriteLine("Read bul");
                     return ReadBulk();
                 default:
-                    //_logger.LogWarning("Unkown Type: {type}", _type.ToString());
-                    Console.WriteLine($"Unkown Type: {_type.ToString()}");
+                    Console.WriteLine($"Unkown Type: {_type}");
                     return new Value();
             }
         }
@@ -71,12 +78,13 @@ namespace KVDB
                 Type = "array",
                 Array = []
             };
-
+            Console.WriteLine("read in arr");
             var arrLen = ReadInteger();
+            Console.WriteLine($"arr len: {arrLen}");
 
             for (var i = 0; i < arrLen; i++)
             {
-                value.Array.Append(Read());
+                value.Array = value.Array.Append(Read()).ToArray();
                 //value.Array[i] = Read();
             }
 
@@ -91,14 +99,14 @@ namespace KVDB
             };
 
             var len = ReadInteger();
-
+            Console.WriteLine($"bulk len: {len}");
             var bulk = new char[len];
 
             _reader.Read(bulk, 0, len);
 
             value.Bulk = new string(bulk);
 
-            ReadLine(2);
+            ReadLine();
 
             return value;
         }
