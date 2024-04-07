@@ -2,9 +2,10 @@
 using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Net.Sockets;
+using System.Net.WebSockets;
 using System.Text;
 
-namespace src
+namespace KVDB
 {
     internal class Server : BackgroundService
     {
@@ -22,7 +23,8 @@ namespace src
 
             ipHostInfo = Dns.GetHostEntry(Dns.GetHostName());
             ipAddress = ipHostInfo.AddressList[0];
-            ipEndPoint = new(ipAddress, 6379);
+            //ipEndPoint = new(ipAddress, 6379);
+            ipEndPoint = new(IPAddress.Parse("0.0.0.0"), 6379);
 
             _logger.LogInformation("Setup ip end point at: {ipEndPoint}", ipEndPoint);
         }
@@ -37,7 +39,7 @@ namespace src
                 }
                 await Listen();
 
-                await Task.Delay(1000, stoppingToken);
+                //await Task.Delay(1000, stoppingToken);
             }
         }
 
@@ -55,20 +57,29 @@ namespace src
                 listener.Listen(100);
 
                 var handler = await listener.AcceptAsync();
-                _logger.LogInformation("Receiving");
-                while (true)
+                while (handler.Connected)
                 {
-                    var buffer = new byte[1_024];
-                    var received = await handler.ReceiveAsync(buffer, SocketFlags.None);
-                    var response = Encoding.UTF8.GetString(buffer, 0, received);
+                    _logger.LogInformation("Receiving");
 
-                    var eom = "<|EOM|>";
-                    if (response.IndexOf(eom) > -1)
+                    using NetworkStream nStream = new(handler);
+                    var buffer = new List<byte>();
+
+                    do
                     {
-                        var echoBytes = Encoding.UTF8.GetBytes("+OK\\r\\n");
-                        await handler.SendAsync(echoBytes, 0);
-                        break;
-                    }
+                        buffer.Add((byte)nStream.ReadByte());
+                    } while (nStream.DataAvailable);
+
+                    var resp = Encoding.UTF8.GetString(buffer.ToArray());
+                    _logger.LogWarning(resp);
+
+                    // pass to parser
+                    var sReader = new StringReader(resp);
+                    RESPParser parse = new(sReader);
+                    parse.Read();
+                    //
+
+                    var echoBytes = Encoding.UTF8.GetBytes("+OK\r\n");
+                    await handler.SendAsync(echoBytes, 0);
                 }
             }
             catch (Exception ex)
