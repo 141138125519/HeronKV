@@ -1,2 +1,15 @@
-﻿// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using src;
+
+Console.WriteLine(@"
+    Starting KVDB!
+    Good Luck
+");
+
+
+var builder = Host.CreateApplicationBuilder(args);
+builder.Services.AddHostedService<Server>();
+
+var host = builder.Build();
+host.Run();
