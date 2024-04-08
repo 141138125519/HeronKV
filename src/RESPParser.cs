@@ -1,4 +1,5 @@
 ﻿using System.Reflection.PortableExecutable;
+using System.Text;
 using System.Threading.Tasks.Dataflow;
 using HeronKV.Data;
 using Microsoft.Extensions.Logging;
@@ -52,7 +53,7 @@ namespace HeronKV
             return int.Parse(line.ToArray());
         }
 
-        public Value Read(StringReader reader)
+        private Value Read(StringReader reader)
         {
             var _type = reader.Read();
 

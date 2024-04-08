@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using HeronKV;
+using src;
 
 Console.WriteLine(@"
     Starting HeronKV!
@@ -20,6 +21,7 @@ to this server when hosted at 0.0.0.0:6379
 var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddSingleton<RESPParser>();
+builder.Services.AddSingleton<RESPWriter>();
 
 builder.Services.AddHostedService<Server>();
 

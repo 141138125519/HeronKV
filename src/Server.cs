@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using src;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -10,6 +11,7 @@ namespace HeronKV
     {
         private readonly ILogger<Server> _logger;
         private readonly RESPParser _parser;
+        private readonly RESPWriter _writer;
 
         IPHostEntry ipHostInfo;
         IPAddress ipAddress;
@@ -18,10 +20,11 @@ namespace HeronKV
         List<Socket> clients;
         List<Task> tasks;
         
-        public Server(ILogger<Server> logger, RESPParser parser)
+        public Server(ILogger<Server> logger, RESPParser parser, RESPWriter writer)
         {
             _logger = logger;
             _parser = parser;
+            _writer = writer;
 
             _logger.LogInformation("Starting Server");
 
@@ -116,6 +119,8 @@ namespace HeronKV
                         _logger.LogInformation($"arrBulk: {a.Bulk}");
                     }
                     //
+
+                    _writer.WriteRESP(cont);
 
                     var echoBytes = Encoding.UTF8.GetBytes("+OK\r\n");
                     await client.SendAsync(echoBytes, 0);
