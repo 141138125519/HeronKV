@@ -1,9 +1,9 @@
 ﻿using System.Reflection.PortableExecutable;
 using System.Threading.Tasks.Dataflow;
-using KVDB.Data;
+using HeronKV.Data;
 using Microsoft.Extensions.Logging;
 
-namespace KVDB
+namespace HeronKV
 {
     internal class RESPParser
     {
@@ -13,27 +13,29 @@ namespace KVDB
         const char BULK = '$';
         const char ARRAY = '*';
 
+        ILogger<RESPParser> _logger;
 
-        //ILogger<RESPParser> _logger;
-        StringReader _reader;
-
-        public RESPParser(StringReader reader)
+        public RESPParser(ILogger<RESPParser> logger)
         {
-            //_logger = logger;
-            _reader = reader;
+            _logger = logger;
         }
 
-        private List<byte> ReadLine()
+        public Value NewRead(StringReader reader)
+        {
+            return Read(reader);
+        }
+
+        private List<byte> ReadLine(StringReader reader)
         {
             int n = 0;
             var line = new List<byte>();
 
             while (true)
             {
-                var b = _reader.Read();
+                var b = reader.Read();
                 if (b == '\r')
                 {
-                    _reader.Read();
+                    reader.Read();
                     break;
                 }
                 line.Add((byte)b);
@@ -43,30 +45,30 @@ namespace KVDB
             return line;
         }
 
-        private int ReadInteger()
+        private int ReadInteger(StringReader reader)
         {
-            var line = ReadLine();
+            var line = ReadLine(reader);
 
             return int.Parse(line.ToArray());
         }
 
-        public Value Read()
+        public Value Read(StringReader reader)
         {
-            var _type = _reader.Read();
+            var _type = reader.Read();
 
             switch (_type)
             {
                 case ARRAY:
-                    return ReadArray();
+                    return ReadArray(reader);
                 case BULK:
-                    return ReadBulk();
+                    return ReadBulk(reader);
                 default:
                     Console.WriteLine($"Unkown Type: {_type}");
                     return new Value();
             }
         }
 
-        private Value ReadArray()
+        private Value ReadArray(StringReader reader)
         {
             var value = new Value
             {
@@ -74,33 +76,33 @@ namespace KVDB
                 Array = []
             };
 
-            var arrLen = ReadInteger();
+            var arrLen = ReadInteger(reader);
 
             for (var i = 0; i < arrLen; i++)
             {
-                value.Array = value.Array.Append(Read()).ToArray();
+                value.Array = value.Array.Append(Read(reader)).ToArray();
                 //value.Array[i] = Read();
             }
 
             return value;
         }
 
-        private Value ReadBulk()
+        private Value ReadBulk(StringReader reader)
         {
             var value = new Value
             {
                 Type = "bulk"
             };
 
-            var len = ReadInteger();
+            var len = ReadInteger(reader);
 
             var bulk = new char[len];
 
-            _reader.Read(bulk, 0, len);
+            reader.Read(bulk, 0, len);
 
             value.Bulk = new string(bulk);
 
-            ReadLine();
+            ReadLine(reader);
 
             return value;
         }

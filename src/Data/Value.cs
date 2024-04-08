@@ -1,4 +1,4 @@
-﻿namespace KVDB.Data
+﻿namespace HeronKV.Data
 {
     public class Value
     {
