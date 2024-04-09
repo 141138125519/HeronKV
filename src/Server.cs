@@ -49,8 +49,7 @@ namespace HeronKV
                 {
                     _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
                 }
-                // TODO - need to improve this, this await also awaits activity on its listener
-                // this means that stopping the progrram will wait for 
+
                 await ListenForClientConnections(stoppingToken);
             }
             Task.WaitAll([.. tasks], stoppingToken);
@@ -82,7 +81,7 @@ namespace HeronKV
                         // but it allows for multple connections, without
                         // having to handle multithreading myself.
                         //_ = Task.Run(() => Listen(handler));
-                        tasks.Add(Task.Run(() => Listen(handler, cancellationToken)));
+                        tasks.Add(Task.Run(() => Listen(handler, cancellationToken), cancellationToken));
                     }
                 }
                 catch (Exception ex)
@@ -149,8 +148,8 @@ namespace HeronKV
             }
             catch (NullReferenceException ex)
             {
-                _logger.LogError("Client Disconnected - remove from list and close socket");
-                _logger.LogError("{ex}", ex);
+                _logger.LogWarning("Client Disconnected - remove from list and close socket");
+                _logger.LogWarning("{ex}", ex);
                 clients.Remove(client);
                 client.Close();
             }
