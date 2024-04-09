@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using HeronKV;
-using src;
 
 Console.WriteLine(@"
     Starting HeronKV!
@@ -22,6 +21,7 @@ var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddSingleton<RESPParser>();
 builder.Services.AddSingleton<RESPSerialiser>();
+builder.Services.AddSingleton<CommandsHandler>();
 
 builder.Services.AddHostedService<Server>();
 

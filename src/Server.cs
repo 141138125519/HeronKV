@@ -1,7 +1,6 @@
 ﻿using HeronKV.Data;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using src;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -13,6 +12,7 @@ namespace HeronKV
         private readonly ILogger<Server> _logger;
         private readonly RESPParser _parser;
         private readonly RESPSerialiser _writer;
+        private readonly CommandsHandler _commandsHandler;
 
         IPHostEntry ipHostInfo;
         IPAddress ipAddress;
@@ -21,11 +21,12 @@ namespace HeronKV
         List<Socket> clients;
         List<Task> tasks;
         
-        public Server(ILogger<Server> logger, RESPParser parser, RESPSerialiser writer)
+        public Server(ILogger<Server> logger, RESPParser parser, RESPSerialiser writer, CommandsHandler handler)
         {
             _logger = logger;
             _parser = parser;
             _writer = writer;
+            _commandsHandler = handler;
 
             _logger.LogInformation("Starting Server");
 
@@ -121,13 +122,28 @@ namespace HeronKV
                     }
                     //
 
-                    // Create OK value then return to client
-                    var okValue = new RESPValue
+                    if (cont.Type != "array")
                     {
-                        Type = "string",
-                        Str = "OK"
-                    };
-                    await client.SendAsync(_writer.SerialiseRESP(okValue), 0);
+                        _logger.LogError("Invalid Request - expected array");
+                        continue;
+                    }
+
+                    if (cont.Array.Length == 0)
+                    {
+                        _logger.LogError("Invalid Request - expected array length > 0");
+                    }
+
+                    cont.Array[0].Bulk = cont.Array[0].Bulk!.ToUpper();
+                    var cmdResult = _commandsHandler.Command(cont.Array);
+                    
+
+                    // Create OK value then return to client
+                    //var okValue = new RESPValue
+                    //{
+                    //    Type = "string",
+                    //    Str = "OK"
+                    //};
+                    await client.SendAsync(_writer.SerialiseRESP(cmdResult), 0);
 
                 }
             }

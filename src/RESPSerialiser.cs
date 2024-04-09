@@ -3,7 +3,7 @@ using HeronKV.Data;
 using Microsoft.Extensions.Logging;
 using System.Text;
 
-namespace src
+namespace HeronKV
 {
     internal class RESPSerialiser
     {
