@@ -21,7 +21,7 @@ namespace HeronKV
             _logger = logger;
         }
 
-        public Value NewRead(StringReader reader)
+        public RESPValue NewRead(StringReader reader)
         {
             return Read(reader);
         }
@@ -53,7 +53,7 @@ namespace HeronKV
             return int.Parse(line.ToArray());
         }
 
-        private Value Read(StringReader reader)
+        private RESPValue Read(StringReader reader)
         {
             var _type = reader.Read();
 
@@ -65,13 +65,13 @@ namespace HeronKV
                     return ReadBulk(reader);
                 default:
                     Console.WriteLine($"Unkown Type: {_type}");
-                    return new Value();
+                    return new RESPValue();
             }
         }
 
-        private Value ReadArray(StringReader reader)
+        private RESPValue ReadArray(StringReader reader)
         {
-            var value = new Value
+            var value = new RESPValue
             {
                 Type = "array",
                 Array = []
@@ -88,9 +88,9 @@ namespace HeronKV
             return value;
         }
 
-        private Value ReadBulk(StringReader reader)
+        private RESPValue ReadBulk(StringReader reader)
         {
-            var value = new Value
+            var value = new RESPValue
             {
                 Type = "bulk"
             };

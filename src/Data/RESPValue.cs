@@ -1,11 +1,11 @@
 ﻿namespace HeronKV.Data
 {
-    public class Value
+    public class RESPValue
     {
         public string? Type;
         public string? Str;
         public int? Num;
         public string? Bulk;
-        public Value[]? Array;
+        public RESPValue[]? Array;
     }
 }

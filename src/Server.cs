@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using HeronKV.Data;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using src;
 using System.Net;
@@ -11,7 +12,7 @@ namespace HeronKV
     {
         private readonly ILogger<Server> _logger;
         private readonly RESPParser _parser;
-        private readonly RESPWriter _writer;
+        private readonly RESPSerialiser _writer;
 
         IPHostEntry ipHostInfo;
         IPAddress ipAddress;
@@ -20,7 +21,7 @@ namespace HeronKV
         List<Socket> clients;
         List<Task> tasks;
         
-        public Server(ILogger<Server> logger, RESPParser parser, RESPWriter writer)
+        public Server(ILogger<Server> logger, RESPParser parser, RESPSerialiser writer)
         {
             _logger = logger;
             _parser = parser;
@@ -120,10 +121,14 @@ namespace HeronKV
                     }
                     //
 
-                    _writer.WriteRESP(cont);
+                    // Create OK value then return to client
+                    var okValue = new RESPValue
+                    {
+                        Type = "string",
+                        Str = "OK"
+                    };
+                    await client.SendAsync(_writer.WriteRESP(okValue), 0);
 
-                    var echoBytes = Encoding.UTF8.GetBytes("+OK\r\n");
-                    await client.SendAsync(echoBytes, 0);
                 }
             }
             catch (NullReferenceException ex)

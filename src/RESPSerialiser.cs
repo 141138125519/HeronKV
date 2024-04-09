@@ -5,7 +5,7 @@ using System.Text;
 
 namespace src
 {
-    internal class RESPWriter
+    internal class RESPSerialiser
     {
         const char STRING = '+';
         const char ERROR = '-';
@@ -13,23 +13,23 @@ namespace src
         const char BULK = '$';
         const char ARRAY = '*';
 
-        ILogger<RESPWriter> _logger;
+        ILogger<RESPSerialiser> _logger;
 
-        public RESPWriter(ILogger<RESPWriter> logger)
+        public RESPSerialiser(ILogger<RESPSerialiser> logger)
         {
             _logger = logger;
         }
 
-        public void WriteRESP(Value value)
+        public byte[] WriteRESP(RESPValue value)
         {
             var bytes = Marshal(value);
 
             // write bytes
             _logger.LogInformation(Encoding.UTF8.GetString(bytes.ToArray()));
-
+            return [.. bytes];
         }
 
-        private List<byte> Marshal(Value value)
+        private List<byte> Marshal(RESPValue value)
         {
             return value.Type switch
             {
@@ -42,7 +42,7 @@ namespace src
             };
         }
 
-        private List<byte> MarshalArray(Value value)
+        private List<byte> MarshalArray(RESPValue value)
         {
             var length = value.Array!.Length;
             _logger.LogWarning(length.ToString());
@@ -61,7 +61,7 @@ namespace src
             return bytes;
         }
 
-        private List<byte> MarshalBulk(Value value)
+        private List<byte> MarshalBulk(RESPValue value)
         {
             var bytes = new List<byte>
             {
@@ -75,7 +75,7 @@ namespace src
             return bytes;
         }
 
-        private List<byte> MarshalString(Value value)
+        private List<byte> MarshalString(RESPValue value)
         {
             var bytes = new List<byte>
             {
@@ -87,12 +87,12 @@ namespace src
             return bytes;
         }
 
-        private List<byte> MarshalNull(Value value)
+        private List<byte> MarshalNull(RESPValue value)
         {
             return [.. Encoding.UTF8.GetBytes("$-1\r\n")];
         }
 
-        private List<byte> MarshalError(Value value)
+        private List<byte> MarshalError(RESPValue value)
         {
             var bytes = new List<byte>
             {

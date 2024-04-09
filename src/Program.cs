@@ -21,7 +21,7 @@ to this server when hosted at 0.0.0.0:6379
 var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddSingleton<RESPParser>();
-builder.Services.AddSingleton<RESPWriter>();
+builder.Services.AddSingleton<RESPSerialiser>();
 
 builder.Services.AddHostedService<Server>();
 
