@@ -127,7 +127,7 @@ namespace HeronKV
                         Type = "string",
                         Str = "OK"
                     };
-                    await client.SendAsync(_writer.WriteRESP(okValue), 0);
+                    await client.SendAsync(_writer.SerialiseRESP(okValue), 0);
 
                 }
             }

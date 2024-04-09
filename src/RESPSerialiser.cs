@@ -20,29 +20,29 @@ namespace src
             _logger = logger;
         }
 
-        public byte[] WriteRESP(RESPValue value)
+        public byte[] SerialiseRESP(RESPValue value)
         {
-            var bytes = Marshal(value);
+            var bytes = Serialise(value);
 
             // write bytes
             _logger.LogInformation(Encoding.UTF8.GetString(bytes.ToArray()));
             return [.. bytes];
         }
 
-        private List<byte> Marshal(RESPValue value)
+        private List<byte> Serialise(RESPValue value)
         {
             return value.Type switch
             {
-                "array" => MarshalArray(value),
-                "bulk" => MarshalBulk(value),
-                "string" => MarshalString(value),
-                "null" => MarshalNull(value),
-                "error" => MarshalError(value),
+                "array" => SerialiseArray(value),
+                "bulk" => SerialiseBulk(value),
+                "string" => SerialiseString(value),
+                "null" => SerialiseNull(value),
+                "error" => SerialiseError(value),
                 _ => [],
             };
         }
 
-        private List<byte> MarshalArray(RESPValue value)
+        private List<byte> SerialiseArray(RESPValue value)
         {
             var length = value.Array!.Length;
             _logger.LogWarning(length.ToString());
@@ -55,13 +55,13 @@ namespace src
             _logger.LogWarning($"array {Encoding.UTF8.GetString(bytes.ToArray())}");
             for (int i = 0; i < length; i++)
             {
-                bytes.AddRange(Marshal(value.Array[i]));
+                bytes.AddRange(Serialise(value.Array[i]));
             }
 
             return bytes;
         }
 
-        private List<byte> MarshalBulk(RESPValue value)
+        private List<byte> SerialiseBulk(RESPValue value)
         {
             var bytes = new List<byte>
             {
@@ -75,7 +75,7 @@ namespace src
             return bytes;
         }
 
-        private List<byte> MarshalString(RESPValue value)
+        private List<byte> SerialiseString(RESPValue value)
         {
             var bytes = new List<byte>
             {
@@ -87,12 +87,12 @@ namespace src
             return bytes;
         }
 
-        private List<byte> MarshalNull(RESPValue value)
+        private List<byte> SerialiseNull(RESPValue value)
         {
             return [.. Encoding.UTF8.GetBytes("$-1\r\n")];
         }
 
-        private List<byte> MarshalError(RESPValue value)
+        private List<byte> SerialiseError(RESPValue value)
         {
             var bytes = new List<byte>
             {
