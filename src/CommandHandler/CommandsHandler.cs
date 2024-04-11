@@ -1,9 +1,9 @@
 ﻿using HeronKV.Data;
 using Microsoft.Extensions.Logging;
 
-namespace HeronKV
+namespace HeronKV.CommandHandler
 {
-    internal class CommandsHandler
+    internal class CommandsHandler : ICommandsHandler
     {
         private readonly ILogger<CommandsHandler> _logger;
         private Dictionary<string, string> data; // for SET GET
@@ -124,7 +124,7 @@ namespace HeronKV
             lock (hData)
             {
                 if (!hData.TryGetValue(hash, out var hashDict))
-                    {
+                {
                     return new RESPValue { Type = "null" };
                 }
 
@@ -159,7 +159,7 @@ namespace HeronKV
 
                 value = [.. hashDict.Values];
             }
-            
+
             var array = new List<RESPValue>();
             foreach (var item in value)
             {

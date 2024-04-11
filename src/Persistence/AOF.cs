@@ -2,22 +2,25 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Text;
+using HeronKV.Data.Serialiser;
+using HeronKV.Data.Parser;
+using HeronKV.CommandHandler;
 
-namespace HeronKV
+namespace HeronKV.Persistence
 {
     internal class AOF : BackgroundService, IAOF
     {
         private readonly ILogger<AOF> _logger;
-        private readonly RESPSerialiser _serialiser;
-        private readonly RESPParser _parser;
-        private readonly CommandsHandler _commandsHandler;
+        private readonly IRESPSerialiser _serialiser;
+        private readonly IRESPParser _parser;
+        private readonly ICommandsHandler _commandsHandler;
 
         private FileStream _stream;
 
         public AOF(ILogger<AOF> logger,
-            RESPSerialiser serialiser,
-            RESPParser parser,
-            CommandsHandler commandsHandler)
+            IRESPSerialiser serialiser,
+            IRESPParser parser,
+            ICommandsHandler commandsHandler)
         {
             _logger = logger;
             _serialiser = serialiser;
@@ -75,8 +78,8 @@ namespace HeronKV
                     if ((byte)read == '*' && cmd.Count != 0)
                     {
                         var sr = new StringReader(Encoding.UTF8.GetString(cmd.ToArray()));
-                        
-                        _ = _commandsHandler.Command(_parser.NewRead(sr).Array!);
+
+                        _ = _commandsHandler.Command(_parser.Parse(sr).Array!);
                         cmd.Clear();
                     }
                     cmd.Add((byte)read);

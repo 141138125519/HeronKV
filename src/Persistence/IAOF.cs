@@ -1,6 +1,6 @@
 ﻿using HeronKV.Data;
 
-namespace HeronKV
+namespace HeronKV.Persistence
 {
     internal interface IAOF
     {

@@ -1,11 +1,9 @@
-﻿using HeronKV;
-using HeronKV.Data;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System.Text;
 
-namespace HeronKV
+namespace HeronKV.Data.Serialiser
 {
-    internal class RESPSerialiser
+    internal class RESPSerialiser : IRESPSerialiser
     {
         const char STRING = '+';
         const char ERROR = '-';
@@ -24,8 +22,6 @@ namespace HeronKV
         {
             var bytes = Serialise(value);
 
-            // write bytes
-            _logger.LogInformation(Encoding.UTF8.GetString(bytes.ToArray()));
             return [.. bytes];
         }
 

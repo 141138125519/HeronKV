@@ -1,12 +1,8 @@
-﻿using System.Reflection.PortableExecutable;
-using System.Text;
-using System.Threading.Tasks.Dataflow;
-using HeronKV.Data;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 
-namespace HeronKV
+namespace HeronKV.Data.Parser
 {
-    internal class RESPParser
+    internal class RESPParser : IRESPParser
     {
         const char STRING = '+';
         const char ERROR = '-';
@@ -21,7 +17,7 @@ namespace HeronKV
             _logger = logger;
         }
 
-        public RESPValue NewRead(StringReader reader)
+        public RESPValue Parse(StringReader reader)
         {
             return Read(reader);
         }

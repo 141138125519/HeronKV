@@ -1,18 +1,21 @@
-﻿using HeronKV.Data;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using HeronKV.Data.Serialiser;
+using HeronKV.Persistence;
+using HeronKV.Data.Parser;
+using HeronKV.CommandHandler;
 
 namespace HeronKV
 {
     internal class Server : BackgroundService
     {
         private readonly ILogger<Server> _logger;
-        private readonly RESPParser _parser;
-        private readonly RESPSerialiser _serialiser;
-        private readonly CommandsHandler _commandsHandler;
+        private readonly IRESPParser _parser;
+        private readonly IRESPSerialiser _serialiser;
+        private readonly ICommandsHandler _commandsHandler;
         private readonly IAOF _aof;
 
         IPHostEntry ipHostInfo;
@@ -23,9 +26,9 @@ namespace HeronKV
         List<Task> tasks;
         
         public Server(ILogger<Server> logger,
-            RESPParser parser,
-            RESPSerialiser serialiser,
-            CommandsHandler handler,
+            IRESPParser parser,
+            IRESPSerialiser serialiser,
+            ICommandsHandler handler,
             IAOF aof)
         {
             _logger = logger;
@@ -124,7 +127,7 @@ namespace HeronKV
 
                     // pass to parser
                     var sReader = new StringReader(resp);
-                    var cont = _parser.NewRead(sReader);
+                    var cont = _parser.Parse(sReader);
 
                     foreach (var a in cont.Array!)
                     {
