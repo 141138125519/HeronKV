@@ -1,6 +1,6 @@
 # HeronKV
 
-A Redis like in-memory data store built in C#
+A Redis like in-memory key value data store built in C#
 
 - Implements a subset of RESP
 - Uses a simple Append Only File for data persistence
