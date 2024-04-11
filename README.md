@@ -3,7 +3,7 @@
 A Redis like in-memory data store built in C#
 
 - Implements a subset of RESP
-- Uses a simple Append Only File for data persistence (This appears to have some issues when project is run from command line?)
+- Uses a simple Append Only File for data persistence
 - Currently uses a dictionary to hold data in memory (this will soon be replaced)
 
 
