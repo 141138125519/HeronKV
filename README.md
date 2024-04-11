@@ -24,6 +24,7 @@ Currently defaults to listen on 0.0.0.0:6379, this should allow the redis-cli to
 ### TODO
 
 - Improve this readme (especially the above "instructions")
+- Need to add proper error handling
 - replace Dictionary as data store
 - allow setting of ip address / port from appsettings
 - Add support for more RESP
