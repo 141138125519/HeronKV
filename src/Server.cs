@@ -11,8 +11,9 @@ namespace HeronKV
     {
         private readonly ILogger<Server> _logger;
         private readonly RESPParser _parser;
-        private readonly RESPSerialiser _writer;
+        private readonly RESPSerialiser _serialiser;
         private readonly CommandsHandler _commandsHandler;
+        private readonly IAOF _aof;
 
         IPHostEntry ipHostInfo;
         IPAddress ipAddress;
@@ -21,12 +22,17 @@ namespace HeronKV
         List<Socket> clients;
         List<Task> tasks;
         
-        public Server(ILogger<Server> logger, RESPParser parser, RESPSerialiser writer, CommandsHandler handler)
+        public Server(ILogger<Server> logger,
+            RESPParser parser,
+            RESPSerialiser serialiser,
+            CommandsHandler handler,
+            IAOF aof)
         {
             _logger = logger;
             _parser = parser;
-            _writer = writer;
+            _serialiser = serialiser;
             _commandsHandler = handler;
+            _aof = aof;
 
             _logger.LogInformation("Starting Server");
 
@@ -35,10 +41,15 @@ namespace HeronKV
             //ipEndPoint = new(ipAddress, 6379);
             ipEndPoint = new(IPAddress.Parse("0.0.0.0"), 6379);
 
+            _logger.LogInformation("Setup ip end point at: {ipEndPoint}", ipEndPoint);
+
             clients = [];
             tasks = [];
 
-            _logger.LogInformation("Setup ip end point at: {ipEndPoint}", ipEndPoint);
+            _logger.LogInformation("Read from AOF file");
+
+            _aof.Rebuild();
+
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -115,7 +126,7 @@ namespace HeronKV
                     var sReader = new StringReader(resp);
                     var cont = _parser.NewRead(sReader);
 
-                    foreach (var a in cont.Array)
+                    foreach (var a in cont.Array!)
                     {
                         _logger.LogInformation($"arrBulk: {a.Bulk}");
                     }
@@ -133,16 +144,15 @@ namespace HeronKV
                     }
 
                     cont.Array[0].Bulk = cont.Array[0].Bulk!.ToUpper();
-                    var cmdResult = _commandsHandler.Command(cont.Array);
                     
+                    if (cont.Array[0].Bulk == "SET" || cont.Array[0].Bulk == "HSET")
+                    {
+                        _aof.Write(cont);
+                    }
+                    
+                    var cmdResult = _commandsHandler.Command(cont.Array);
 
-                    // Create OK value then return to client
-                    //var okValue = new RESPValue
-                    //{
-                    //    Type = "string",
-                    //    Str = "OK"
-                    //};
-                    await client.SendAsync(_writer.SerialiseRESP(cmdResult), 0);
+                    await client.SendAsync(_serialiser.SerialiseRESP(cmdResult), 0);
 
                 }
             }
