@@ -77,8 +77,7 @@ namespace HeronKV.Data.Parser
 
             for (var i = 0; i < arrLen; i++)
             {
-                value.Array = value.Array.Append(Read(reader)).ToArray();
-                //value.Array[i] = Read();
+                value.Array = [.. value.Array, Read(reader)];
             }
 
             return value;

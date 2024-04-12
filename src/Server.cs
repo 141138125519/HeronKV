@@ -7,7 +7,6 @@ using HeronKV.Data.Serialiser;
 using HeronKV.Persistence;
 using HeronKV.Data.Parser;
 using HeronKV.CommandHandler;
-using Microsoft.Extensions.Configuration;
 
 namespace HeronKV
 {
@@ -53,7 +52,6 @@ namespace HeronKV
             _logger.LogInformation("Read from AOF file");
 
             _aof.Rebuild();
-
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -95,7 +93,7 @@ namespace HeronKV
                         // not sure if this is the best way to handle this
                         // but it allows for multple connections, without
                         // having to handle multithreading myself.
-                        tasks.Add(Task.Run(() => Listen(handler, cancellationToken), cancellationToken));
+                        tasks.Add(Task.Run(() => ClientConnect(handler, cancellationToken), cancellationToken));
                     }
                 }
                 catch (Exception ex)
@@ -105,7 +103,13 @@ namespace HeronKV
             }
         }
 
-        private async Task Listen(Socket client, CancellationToken cancellationToken)
+        /// <summary>
+        /// Once a client has connected start this task to handle requests from that client
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private async Task ClientConnect(Socket client, CancellationToken cancellationToken)
         {
             _logger.LogInformation("New client thread");
             try
@@ -122,19 +126,19 @@ namespace HeronKV
                         buffer.Add((byte)nStream.ReadByte());
                     } while (nStream.DataAvailable);
 
+                    // Don't like this.
+                    // take data sent from client and turn into string
+                    // this string is needed as currently RESPParse uses
+                    // a StringReader <= this is the part I am not keen on.
                     var respString = Encoding.UTF8.GetString(buffer.ToArray());
-                    _logger.LogWarning(respString);
                     // pass to parser
                     var sReader = new StringReader(respString);
                     var respValue = _parser.Parse(sReader);
-
-                    //
 
                     if (respValue.Type != "array")
                     {
                         _logger.LogError("Invalid Request - expected array");
                     }
-
                     if (respValue.Array!.Length == 0)
                     {
                         _logger.LogError("Invalid Request - expected array length > 0");
@@ -142,6 +146,7 @@ namespace HeronKV
 
                     respValue.Array[0].Bulk = respValue.Array[0].Bulk!.ToUpper();
                     
+                    // Write any SET or HSET commands to aof data can be repopulated into memory on start up
                     if (respValue.Array[0].Bulk == "SET" || respValue.Array[0].Bulk == "HSET")
                     {
                         _aof.Write(respValue);

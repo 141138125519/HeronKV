@@ -16,6 +16,15 @@ namespace HeronKV.CommandHandler
             hData = [];
         }
 
+        /// <summary>
+        /// Sends the received command to the correct function to handle it.
+        /// 
+        /// See: https://redis.io/docs/latest/commands/ for full list of commands,
+        /// I will gradually work my way through this, although I am unlikly to
+        /// implement it all anytime soon. 
+        /// </summary>
+        /// <param name="args"></param>
+        /// <returns></returns>
         public RESPValue Command(RESPValue[] args)
         {
             return args[0].Bulk switch
