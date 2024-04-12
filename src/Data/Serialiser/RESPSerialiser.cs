@@ -41,14 +41,14 @@ namespace HeronKV.Data.Serialiser
         private List<byte> SerialiseArray(RESPValue value)
         {
             var length = value.Array!.Length;
-            _logger.LogWarning(length.ToString());
+
             var bytes = new List<byte>
             {
                 (byte)ARRAY
             };
             bytes.AddRange(Encoding.UTF8.GetBytes(length.ToString()));
             bytes.AddRange([(byte)'\r', (byte)'\n']);
-            _logger.LogWarning($"array {Encoding.UTF8.GetString(bytes.ToArray())}");
+
             for (int i = 0; i < length; i++)
             {
                 bytes.AddRange(Serialise(value.Array[i]));
