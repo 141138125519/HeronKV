@@ -21,6 +21,7 @@ namespace HeronKV.CommandHandler
             return args[0].Bulk switch
             {
                 "PING" => Ping(args),
+                "COMMAND" => Cmd(args),
                 "SET" => Set(args),
                 "GET" => Get(args),
                 "HSET" => HSet(args),
@@ -38,6 +39,30 @@ namespace HeronKV.CommandHandler
             }
 
             return new RESPValue { Type = "string", Str = args[1].Bulk };
+        }
+
+        private RESPValue Cmd(RESPValue[] args)
+        {
+            if (args.Length > 1)
+            {
+                // when redis-cli starts it sends a COMMAND DOCS command, currently this won't support that
+                return new RESPValue { Type = "error", Str = "ERR currently only supports base COMMAND command." };
+            }
+
+            // This should really return an array for each command see: https://redis.io/docs/latest/commands/command/
+            // But this more simple implementation will worrk for now.
+            var array = new List<RESPValue>
+            {
+                new() { Type = "bulk", Bulk = "ping" },
+                new() { Type = "bulk", Bulk = "command" },
+                new() { Type = "bulk", Bulk = "set" },
+                new() { Type = "bulk", Bulk = "get" },
+                new() { Type = "bulk", Bulk = "hset" },
+                new() { Type = "bulk", Bulk = "hget" },
+                new() { Type = "bulk", Bulk = "hgetall" }
+            };
+
+            return new RESPValue { Type = "array", Array = [.. array]};
         }
 
         private RESPValue Set(RESPValue[] args)
