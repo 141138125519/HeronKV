@@ -7,6 +7,7 @@ using HeronKV.Data.Serialiser;
 using HeronKV.Persistence;
 using HeronKV.Data.Parser;
 using HeronKV.CommandHandler;
+using Microsoft.Extensions.Configuration;
 
 namespace HeronKV
 {
@@ -94,7 +95,6 @@ namespace HeronKV
                         // not sure if this is the best way to handle this
                         // but it allows for multple connections, without
                         // having to handle multithreading myself.
-                        //_ = Task.Run(() => Listen(handler));
                         tasks.Add(Task.Run(() => Listen(handler, cancellationToken), cancellationToken));
                     }
                 }
@@ -122,38 +122,32 @@ namespace HeronKV
                         buffer.Add((byte)nStream.ReadByte());
                     } while (nStream.DataAvailable);
 
-                    var resp = Encoding.UTF8.GetString(buffer.ToArray());
-                    _logger.LogWarning(resp);
-
+                    var respString = Encoding.UTF8.GetString(buffer.ToArray());
+                    _logger.LogWarning(respString);
                     // pass to parser
-                    var sReader = new StringReader(resp);
-                    var cont = _parser.Parse(sReader);
+                    var sReader = new StringReader(respString);
+                    var respValue = _parser.Parse(sReader);
 
-                    foreach (var a in cont.Array!)
-                    {
-                        _logger.LogInformation($"arrBulk: {a.Bulk}");
-                    }
                     //
 
-                    if (cont.Type != "array")
+                    if (respValue.Type != "array")
                     {
                         _logger.LogError("Invalid Request - expected array");
-                        continue;
                     }
 
-                    if (cont.Array.Length == 0)
+                    if (respValue.Array!.Length == 0)
                     {
                         _logger.LogError("Invalid Request - expected array length > 0");
                     }
 
-                    cont.Array[0].Bulk = cont.Array[0].Bulk!.ToUpper();
+                    respValue.Array[0].Bulk = respValue.Array[0].Bulk!.ToUpper();
                     
-                    if (cont.Array[0].Bulk == "SET" || cont.Array[0].Bulk == "HSET")
+                    if (respValue.Array[0].Bulk == "SET" || respValue.Array[0].Bulk == "HSET")
                     {
-                        _aof.Write(cont);
+                        _aof.Write(respValue);
                     }
                     
-                    var cmdResult = _commandsHandler.Command(cont.Array);
+                    var cmdResult = _commandsHandler.Command(respValue.Array);
 
                     await client.SendAsync(_serialiser.SerialiseRESP(cmdResult), 0);
 
