@@ -27,7 +27,7 @@ builder.Services.AddSingleton<IRESPParser, RESPParser>();
 builder.Services.AddSingleton<IRESPSerialiser, RESPSerialiser>();
 builder.Services.AddSingleton<ICommandsHandler, CommandsHandler>();
 
-// Make sure AOF serrvice is set up in sucha a way that its interface can be injected into Server.
+// Make sure AOF service is set up in such a way that its interface can be injected into Server.
 builder.Services.AddSingleton<IAOF, AOF>();
 builder.Services.AddHostedService(services => (AOF) services.GetService<IAOF>()!);
 
