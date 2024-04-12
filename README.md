@@ -28,5 +28,5 @@ Currently defaults to listen on 0.0.0.0:6379, this should allow the redis-cli to
 - Tidy Server.cs
 - replace Dictionary as data store
 - allow setting of ip address / port from appsettings
-- Add support for more RESP
+- Add support for more RESP (Add COMMAND so user can more easily find all currently supported commands)
 
