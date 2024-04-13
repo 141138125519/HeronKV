@@ -1,5 +1,7 @@
 # HeronKV
 
+![.NET Build and Test](https://github.com/141138125519/HeronKV/actions/workflows/dotnet.yml/badge.svg)
+
 A Redis like in-memory key value data store built in C#
 
 - Makes use of a TCP socket server to listen for connections
