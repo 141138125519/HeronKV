@@ -2,7 +2,7 @@
 
 namespace HeronKV.CommandHandler
 {
-    internal interface ICommandsHandler
+    public interface ICommandsHandler
     {
         public RESPValue Command(RESPValue[] args);
     }

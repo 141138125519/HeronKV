@@ -3,7 +3,7 @@ using System.Text;
 
 namespace HeronKV.Data.Serialiser
 {
-    internal class RESPSerialiser : IRESPSerialiser
+    public class RESPSerialiser : IRESPSerialiser
     {
         const char STRING = '+';
         const char ERROR = '-';
@@ -11,9 +11,9 @@ namespace HeronKV.Data.Serialiser
         const char BULK = '$';
         const char ARRAY = '*';
 
-        ILogger<RESPSerialiser> _logger;
+        ILogger<IRESPSerialiser> _logger;
 
-        public RESPSerialiser(ILogger<RESPSerialiser> logger)
+        public RESPSerialiser(ILogger<IRESPSerialiser> logger)
         {
             _logger = logger;
         }

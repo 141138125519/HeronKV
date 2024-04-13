@@ -2,7 +2,7 @@
 
 namespace HeronKV.Data.Parser
 {
-    internal class RESPParser : IRESPParser
+    public class RESPParser : IRESPParser
     {
         const char STRING = '+';
         const char ERROR = '-';
@@ -10,9 +10,9 @@ namespace HeronKV.Data.Parser
         const char BULK = '$';
         const char ARRAY = '*';
 
-        ILogger<RESPParser> _logger;
+        ILogger<IRESPParser> _logger;
 
-        public RESPParser(ILogger<RESPParser> logger)
+        public RESPParser(ILogger<IRESPParser> logger)
         {
             _logger = logger;
         }

@@ -3,13 +3,13 @@ using Microsoft.Extensions.Logging;
 
 namespace HeronKV.CommandHandler
 {
-    internal class CommandsHandler : ICommandsHandler
+    public class CommandsHandler : ICommandsHandler
     {
-        private readonly ILogger<CommandsHandler> _logger;
+        private readonly ILogger<ICommandsHandler> _logger;
         private Dictionary<string, string> data; // for SET GET
         private Dictionary<string, Dictionary<string, string>> hData; // for HSET HGET
 
-        public CommandsHandler(ILogger<CommandsHandler> logger)
+        public CommandsHandler(ILogger<ICommandsHandler> logger)
         {
             _logger = logger;
             data = [];
